@@ -33,6 +33,10 @@ class Router {
     is() {
 
     }
+
+    dispatch() {
+
+    }
 }
 
 export default Router;
