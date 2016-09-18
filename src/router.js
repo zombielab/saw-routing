@@ -2,7 +2,37 @@
 
 class Router {
 
+    get() {
 
+    }
+
+    post() {
+
+    }
+
+    put() {
+
+    }
+
+    patch() {
+
+    }
+
+    delete() {
+
+    }
+
+    any() {
+
+    }
+
+    current() {
+
+    }
+
+    is() {
+
+    }
 }
 
 export default Router;
