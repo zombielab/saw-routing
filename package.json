@@ -1,16 +1,16 @@
 {
-  "name": "saw-router",
+  "name": "saw-routing",
   "version": "0.0.1",
   "author": "Huseyin DOGAN",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zombielab/saw-router.git"
+    "url": "https://github.com/zombielab/saw-routing.git"
   },
   "bugs": {
-    "url": "https://github.com/zombielab/saw-router/issues"
+    "url": "https://github.com/zombielab/saw-routing/issues"
   },
-  "homepage": "https://github.com/zombielab/saw-router",
+  "homepage": "https://github.com/zombielab/saw-routing",
   "main": "index.js",
   "dependencies": {
     "saw-support": "https://github.com/zombielab/saw-support.git",
