@@ -22,6 +22,8 @@ class Bootstrapper {
     static bootstrap(app) {
         app.use((() => {
             var _ref = (0, _asyncToGenerator3.default)(function* (ctx, next) {
+                ctx.body = "test";
+
                 var route = _sawRouting2.default.match(ctx.request);
 
                 console.log(route.uri);

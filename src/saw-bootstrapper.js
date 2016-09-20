@@ -6,6 +6,8 @@ import router from "saw-routing";
 class Bootstrapper {
     static bootstrap(app) {
         app.use(async (ctx, next) => {
+            ctx.body = "test";
+
             var route = router.match(ctx.request);
 
             console.log(route.uri);
