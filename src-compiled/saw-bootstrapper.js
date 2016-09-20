@@ -28,7 +28,7 @@ class Bootstrapper {
 
         app.use((() => {
             var _ref = (0, _asyncToGenerator3.default)(function* (ctx, next) {
-                app.emit("route.register", _sawRouting2.default.routes);
+                app.emit("route.register", _sawRouting2.default);
 
                 var route = _sawRouting2.default.match(ctx.request);
 

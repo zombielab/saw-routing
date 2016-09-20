@@ -12,7 +12,7 @@ class Bootstrapper {
         });
 
         app.use(async (ctx, next) => {
-            app.emit("route.register", router.routes);
+            app.emit("route.register", router);
 
             var route = router.match(ctx.request);
 
