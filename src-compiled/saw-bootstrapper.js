@@ -20,9 +20,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class Bootstrapper {
     static bootstrap(app) {
+        app.on("route.register", function (collection) {
+            collection.get("/", function () {
+                return "bonjour";
+            });
+        });
+
         app.use((() => {
             var _ref = (0, _asyncToGenerator3.default)(function* (ctx, next) {
-                ctx.body = "test";
+                app.emit("route.register", _sawRouting2.default.routes);
 
                 var route = _sawRouting2.default.match(ctx.request);
 

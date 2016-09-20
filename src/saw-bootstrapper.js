@@ -5,8 +5,14 @@ import router from "saw-routing";
 
 class Bootstrapper {
     static bootstrap(app) {
+        app.on("route.register", function (collection) {
+            collection.get("/", function () {
+                return "bonjour";
+            });
+        });
+
         app.use(async (ctx, next) => {
-            ctx.body = "test";
+            app.emit("route.register", router.routes);
 
             var route = router.match(ctx.request);
 
