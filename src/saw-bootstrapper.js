@@ -11,15 +11,21 @@ class Bootstrapper {
             });
         });
 
-        app.use(async (ctx, next) => {
-            app.emit("route.register", router);
+        //
+        app.emit("route.register", router);
 
-            var route = router.match(ctx.request);
+        // Dispatch router
+        app.use(router.dispatch);
 
-            console.log(route.uri);
-
-            return next();
-        });
+        // app.use(async (ctx, next) => {
+        //     app.emit("route.register", router);
+        //
+        //     var route = router.match(ctx.request);
+        //
+        //     console.log(route.uri);
+        //
+        //     return next();
+        // });
     }
 }
 

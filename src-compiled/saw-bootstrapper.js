@@ -4,10 +4,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _asyncToGenerator2 = require("babel-runtime/helpers/asyncToGenerator");
-
-var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
-
 var _sawConfig = require("saw-config");
 
 var _sawConfig2 = _interopRequireDefault(_sawConfig);
@@ -26,21 +22,21 @@ class Bootstrapper {
             });
         });
 
-        app.use((() => {
-            var _ref = (0, _asyncToGenerator3.default)(function* (ctx, next) {
-                app.emit("route.register", _sawRouting2.default);
+        //
+        app.emit("route.register", _sawRouting2.default);
 
-                var route = _sawRouting2.default.match(ctx.request);
+        // Dispatch router
+        app.use(_sawRouting2.default.dispatch);
 
-                console.log(route.uri);
-
-                return next();
-            });
-
-            return function (_x, _x2) {
-                return _ref.apply(this, arguments);
-            };
-        })());
+        // app.use(async (ctx, next) => {
+        //     app.emit("route.register", router);
+        //
+        //     var route = router.match(ctx.request);
+        //
+        //     console.log(route.uri);
+        //
+        //     return next();
+        // });
     }
 }
 

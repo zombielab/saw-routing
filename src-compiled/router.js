@@ -1,12 +1,14 @@
 "use strict";
 
+// import helpers from "saw-support/helpers";
+
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _helpers = require("saw-support/helpers");
+var _asyncToGenerator2 = require("babel-runtime/helpers/asyncToGenerator");
 
-var _helpers2 = _interopRequireDefault(_helpers);
+var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var _route = require("./route");
 
@@ -20,45 +22,57 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var $routes = {},
     $verbs = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"],
-    $prefix = "/";
+    $request;
 
 function makeRoute(methods, uri, action) {
     var callable;
 
-    switch (typeof action) {
-        case "string":
-            callable = function () {
+    // Validating route methods
+    for (let method of methods) {
+        if ($verbs.indexOf(method) < 0) {
+            throw new Error(`Invalid route method: ${ method }.`);
+        }
+    }
+
+    // Resolve route callback
+    if (typeof action === "string") {
+        callable = (() => {
+            var _ref = (0, _asyncToGenerator3.default)(function* () {
                 var [path, method] = action.split("@"),
                     object = new (require(path))();
 
-                return object[method];
+                return yield object[method];
+            });
+
+            return function callable() {
+                return _ref.apply(this, arguments);
             };
-            break;
+        })();
+    } else if (typeof action === "object" && Array.isArray(action)) {
+        callable = (() => {
+            var _ref2 = (0, _asyncToGenerator3.default)(function* () {
+                var [path, method] = action,
+                    object = new (require(path))();
 
-        case "object":
-            if (Array.isArray(action) === true) {
-                callable = function () {
-                    var [path, method] = action,
-                        object = new (require(path))();
+                return yield object[method];
+            });
 
-                    return object[method];
-                };
-            } else {
-                callable = function () {
-                    var object = new (require(action.path))();
+            return function callable() {
+                return _ref2.apply(this, arguments);
+            };
+        })();
+    } else if (typeof action === "function") {
+        callable = (() => {
+            var _ref3 = (0, _asyncToGenerator3.default)(function* () {
+                return yield action;
+            });
 
-                    return object[action.method];
-                };
-            }
-            break;
-
-        case "function":
-            callable = action;
-            break;
-
-        default:
-            throw new Error("Invalid route callback.");
-            break;
+            return function callable() {
+                return _ref3.apply(this, arguments);
+            };
+        })();
+    } else {
+        throw new Error("Invalid route callback.");
     }
 
     return new _route2.default(methods, uri, callable);
@@ -83,61 +97,74 @@ class Router {
         }
     }
 
-    get(uri, action = null) {
+    get(uri, action) {
         return addRoute(["GET", "HEAD"], uri, action);
     }
 
-    post(uri, action = null) {
+    post(uri, action) {
         return addRoute(["POST"], uri, action);
     }
 
-    put(uri, action = null) {
+    put(uri, action) {
         return addRoute(["PUT"], uri, action);
     }
 
-    patch(uri, action = null) {
+    patch(uri, action) {
         return addRoute(["PATCH"], uri, action);
     }
 
-    delete(uri, action = null) {
+    delete(uri, action) {
         return addRoute(["DELETE"], uri, action);
     }
 
-    any(uri, action = null) {
+    match(methods, uri, action) {
+        return addRoute(methods, uri, action);
+    }
+
+    all(uri, action) {
         return addRoute($verbs, uri, action);
     }
 
-    is() {}
+    // TODO:
+    group() {}
 
-    match(request) {}
+    find(request) {
+        var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
-    prefix(uri) {
-        if (uri.charAt(0) == "/") {
-            uri = uri.substr(1, uri.length - 1);
-        }
+        for (let route of routes) {
+            var regexp = new RegExp(route.path),
+                match = regexp.exec(request.path);
 
-        if (uri.charAt(uri.length - 1) == "/") {
-            uri = uri.substr(0, uri.length - 1);
-        }
-
-        return "/" + $prefix + "/" + uri;
-    }
-
-    match(request) {
-        if ($verbs.indexOf(request.method) >= 0) {
-            var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
-
-            for (let route of routes) {
-                var regexp = new RegExp(this.prefix(route.uri)),
-                    match = regexp.exec(request.path);
-
-                if (match !== null && match.index === 0) {
-                    return route;
-                }
+            if (match !== null && match.index === 0) {
+                return route;
             }
         }
 
-        throw new _notFoundHttpError2.default();
+        return null;
+    }
+
+    dispatch(request, next) {
+        var _this = this;
+
+        return (0, _asyncToGenerator3.default)(function* () {
+            var route = null;
+
+            $request = request;
+
+            if ($verbs.indexOf(request.method) >= 0) {
+                route = _this.find(request);
+            }
+
+            if (route !== null) {
+                return yield route.handle(request, next);
+            }
+
+            throw new _notFoundHttpError2.default();
+        })();
+    }
+
+    get request() {
+        return $request;
     }
 
     get routes() {

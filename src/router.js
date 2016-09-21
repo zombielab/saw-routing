@@ -1,6 +1,6 @@
 "use strict";
 
-import helpers from "saw-support/helpers";
+// import helpers from "saw-support/helpers";
 import Route from "./route";
 import NotFoundHttpError from "./error/not-found-http-error";
 
@@ -13,45 +13,39 @@ var $routes = {},
         "PATCH",
         "DELETE"
     ],
-    $prefix = "/";
+    $request;
 
 function makeRoute(methods, uri, action) {
     var callable;
 
-    switch (typeof action) {
-        case "string":
-            callable = function () {
-                var [path, method] = action.split("@"),
-                    object = new (require(path));
+    // Validating route methods
+    for (let method of methods) {
+        if ($verbs.indexOf(method) < 0) {
+            throw new Error(`Invalid route method: ${method}.`);
+        }
+    }
 
-                return object[method];
-            };
-            break;
+    // Resolve route callback
+    if (typeof action === "string") {
+        callable = async function () {
+            var [path, method] = action.split("@"),
+                object = new (require(path));
 
-        case "object":
-            if (Array.isArray(action) === true) {
-                callable = function () {
-                    var [path, method] = action,
-                        object = new (require(path));
+            return await object[method];
+        };
+    } else if (typeof action === "object" && Array.isArray(action)) {
+        callable = async function () {
+            var [path, method] = action,
+                object = new (require(path));
 
-                    return object[method];
-                };
-            } else {
-                callable = function () {
-                    var object = new (require(action.path));
-
-                    return object[action.method];
-                };
-            }
-            break;
-
-        case "function":
-            callable = action;
-            break;
-
-        default:
-            throw new Error("Invalid route callback.");
-            break;
+            return await object[method];
+        };
+    } else if (typeof action === "function") {
+        callable = async function () {
+            return await action;
+        };
+    } else {
+        throw new Error("Invalid route callback.");
     }
 
     return new Route(methods, uri, callable);
@@ -76,65 +70,72 @@ class Router {
         }
     }
 
-    get(uri, action = null) {
+    get(uri, action) {
         return addRoute(["GET", "HEAD"], uri, action);
     }
 
-    post(uri, action = null) {
+    post(uri, action) {
         return addRoute(["POST"], uri, action);
     }
 
-    put(uri, action = null) {
+    put(uri, action) {
         return addRoute(["PUT"], uri, action);
     }
 
-    patch(uri, action = null) {
+    patch(uri, action) {
         return addRoute(["PATCH"], uri, action);
     }
 
-    delete(uri, action = null) {
+    delete(uri, action) {
         return addRoute(["DELETE"], uri, action);
     }
 
-    any(uri, action = null) {
+    match(methods, uri, action) {
+        return addRoute(methods, uri, action);
+    }
+
+    all(uri, action) {
         return addRoute($verbs, uri, action);
     }
 
-    is() {
+    // TODO:
+    group() {
 
     }
 
-    match(request) {
+    find(request) {
+        var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
-    }
+        for (let route of routes) {
+            var regexp = new RegExp(route.path),
+                match = regexp.exec(request.path);
 
-    prefix(uri) {
-        if (uri.charAt(0) == "/") {
-            uri = uri.substr(1, uri.length - 1);
-        }
-
-        if (uri.charAt(uri.length - 1) == "/") {
-            uri = uri.substr(0, uri.length - 1);
-        }
-
-        return "/" + $prefix + "/" + uri;
-    }
-
-    match(request) {
-        if ($verbs.indexOf(request.method) >= 0) {
-            var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
-
-            for (let route of routes) {
-                var regexp = new RegExp(this.prefix(route.uri)),
-                    match = regexp.exec(request.path);
-
-                if (match !== null && match.index === 0) {
-                    return route;
-                }
+            if (match !== null && match.index === 0) {
+                return route;
             }
         }
 
+        return null;
+    }
+
+    async dispatch(request, next) {
+        var route = null;
+
+        $request = request;
+
+        if ($verbs.indexOf(request.method) >= 0) {
+            route = this.find(request);
+        }
+
+        if (route !== null) {
+            return await route.handle(request, next);
+        }
+
         throw new NotFoundHttpError;
+    }
+
+    get request() {
+        return $request;
     }
 
     get routes() {
