@@ -10,8 +10,18 @@ class Bootstrapper {
             //     return "bonjour";
             // });
 
+            // collection.get("/", function (ctx, next) {
+            //     ctx.body = "bonjour";
+            //
+            //     return next();
+            // });
+
             collection.get("/", function (ctx, next) {
                 ctx.body = "bonjour";
+            });
+
+            collection.get("/", (ctx, next) => {
+                ctx.body = "bonsoir";
 
                 return next();
             });

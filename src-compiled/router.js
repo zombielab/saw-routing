@@ -174,9 +174,11 @@ class Router {
                 //
                 // return next();
 
-                var response = yield route.handle(ctx, next);
+                // var response = await route.handle(ctx, next);
+                //
+                // return typeof response !== "undefined" ? response : next();
 
-                return typeof response !== "undefined" ? response : next();
+                return yield route.handle(ctx, next);
             }
 
             throw new _notFoundHttpError2.default();
