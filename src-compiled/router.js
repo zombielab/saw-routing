@@ -1,7 +1,5 @@
 "use strict";
 
-// import helpers from "saw-support/helpers";
-
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -85,7 +83,7 @@ function addRoute(methods, uri, action) {
 
     for (var method of methods) {
         if (typeof $routes[method] !== "undefined") {
-            $routes[method].push(route);
+            $routes[method][uri] = route;
         }
     }
 
@@ -95,7 +93,7 @@ function addRoute(methods, uri, action) {
 class Router {
     constructor() {
         for (var verb of $verbs) {
-            $routes[verb] = [];
+            $routes[verb] = {};
         }
     }
 
@@ -133,12 +131,15 @@ class Router {
     find(request) {
         var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
-        for (let route of routes) {
-            var regexp = new RegExp(route.path),
-                match = regexp.exec(request.path);
+        for (let k in routes) {
+            if (routes.hasOwnProperty(k)) {
+                var route = routes[k],
+                    regexp = new RegExp(route.path),
+                    match = regexp.exec(request.path);
 
-            if (match !== null && match.index === 0) {
-                return route;
+                if (match !== null && match.index === 0) {
+                    return route;
+                }
             }
         }
 
@@ -157,27 +158,7 @@ class Router {
                 route = _this.find(ctx);
             }
 
-            // TODO: autoformat responses ?
             if (route !== null) {
-                // var response = await route.handle(ctx, next);
-                //
-                // if (typeof response !== "undefined") {
-                //     if (typeof response === "string") {
-                //         ctx.body = response;
-                //     } else if (typeof response === "object") {
-                //         ctx.type = "application/json";
-                //         ctx.body = JSON.parse(response);
-                //     } else {
-                //         return response;
-                //     }
-                // }
-                //
-                // return next();
-
-                // var response = await route.handle(ctx, next);
-                //
-                // return typeof response !== "undefined" ? response : next();
-
                 return yield route.handle(ctx, next);
             }
 
