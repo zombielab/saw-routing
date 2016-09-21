@@ -15,7 +15,9 @@ class Bootstrapper {
         app.emit("route.register", router);
 
         // Dispatch router
-        app.use(router.dispatch);
+        app.use(async (ctx, next) => {
+            return await router.dispatch(ctx, next);
+        });
 
         // app.use(async (ctx, next) => {
         //     app.emit("route.register", router);
