@@ -145,20 +145,38 @@ class Router {
         return null;
     }
 
-    dispatch(request, next) {
+    dispatch(ctx, next) {
         var _this = this;
 
         return (0, _asyncToGenerator3.default)(function* () {
             var route = null;
 
-            $request = request;
+            $request = ctx;
 
-            if ($verbs.indexOf(request.method) >= 0) {
-                route = _this.find(request);
+            if ($verbs.indexOf(ctx.method) >= 0) {
+                route = _this.find(ctx);
             }
 
+            // TODO: autoformat responses ?
             if (route !== null) {
-                return yield route.handle(request, next);
+                // var response = await route.handle(ctx, next);
+                //
+                // if (typeof response !== "undefined") {
+                //     if (typeof response === "string") {
+                //         ctx.body = response;
+                //     } else if (typeof response === "object") {
+                //         ctx.type = "application/json";
+                //         ctx.body = JSON.parse(response);
+                //     } else {
+                //         return response;
+                //     }
+                // }
+                //
+                // return next();
+
+                var response = yield route.handle(ctx, next);
+
+                return typeof response !== "undefined" ? response : next();
             }
 
             throw new _notFoundHttpError2.default();

@@ -21,8 +21,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 class Bootstrapper {
     static bootstrap(app) {
         app.on("route.register", function (collection) {
-            collection.get("/", function () {
-                return "bonjour";
+            // collection.get("/", function () {
+            //     return "bonjour";
+            // });
+
+            collection.get("/", function (ctx, next) {
+                ctx.body = "bonjour";
+
+                return next();
             });
         });
 

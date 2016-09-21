@@ -6,8 +6,14 @@ import router from "saw-routing";
 class Bootstrapper {
     static bootstrap(app) {
         app.on("route.register", function (collection) {
-            collection.get("/", function () {
-                return "bonjour";
+            // collection.get("/", function () {
+            //     return "bonjour";
+            // });
+
+            collection.get("/", function (ctx, next) {
+                ctx.body = "bonjour";
+
+                return next();
             });
         });
 
