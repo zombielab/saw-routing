@@ -66,9 +66,16 @@ class Route {
     }
 
     async handle() {
-        var handler = await $action.get(this).call();
+        var handler = await ($action.get(this)).call();
 
-        return await handler.apply(this, Array.from(arguments));
+        // Bindings values to handler
+        for (let k in $bindings.get(this)) {
+            if ($bindings.get(this).hasOwnProperty(k)) {
+                handler[k] = $bindings.get(this)[k];
+            }
+        }
+
+        return await handler.apply(handler, Array.from(arguments));
     }
 }
 

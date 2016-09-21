@@ -90,7 +90,14 @@ class Route {
         return (0, _asyncToGenerator3.default)(function* () {
             var handler = yield $action.get(_this).call();
 
-            return yield handler.apply(_this, (0, _from2.default)(_arguments));
+            // Bindings values to handler
+            for (let k in $bindings.get(_this)) {
+                if ($bindings.get(_this).hasOwnProperty(k)) {
+                    handler[k] = $bindings.get(_this)[k];
+                }
+            }
+
+            return yield handler.apply(handler, (0, _from2.default)(_arguments));
         })();
     }
 }
