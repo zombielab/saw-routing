@@ -61,6 +61,8 @@ function makeRoute(methods, uri, action) {
                 return _ref2.apply(this, arguments);
             };
         })();
+    } else if (typeof action === "object") {
+        // TODO:
     } else if (typeof action === "function") {
         callable = (() => {
             var _ref3 = (0, _asyncToGenerator3.default)(function* () {

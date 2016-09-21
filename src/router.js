@@ -40,6 +40,8 @@ function makeRoute(methods, uri, action) {
 
             return await object[method];
         };
+    } else if (typeof action === "object") {
+        // TODO:
     } else if (typeof action === "function") {
         callable = async function () {
             return await action;
