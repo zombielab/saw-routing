@@ -4,7 +4,7 @@ import Route from "./route";
 import NotFoundHttpError from "./error/not-found-http-error";
 
 var $routes = {},
-    $verbs = [
+    $methods = [
         "GET",
         "HEAD",
         "POST",
@@ -19,7 +19,7 @@ function makeRoute(methods, uri, action) {
 
     // Validating route methods
     for (let method of methods) {
-        if ($verbs.indexOf(method) < 0) {
+        if ($methods.indexOf(method) < 0) {
             throw new Error(`Invalid route method: ${method}.`);
         }
     }
@@ -66,7 +66,7 @@ function addRoute(methods, uri, action) {
 
 class Router {
     constructor() {
-        for (var verb of $verbs) {
+        for (var verb of $methods) {
             $routes[verb] = {};
         }
     }
@@ -96,7 +96,7 @@ class Router {
     }
 
     all(uri, action) {
-        return addRoute($verbs, uri, action);
+        return addRoute($methods, uri, action);
     }
 
     // TODO:
@@ -110,7 +110,7 @@ class Router {
         for (let k in routes) {
             if (routes.hasOwnProperty(k)) {
                 var route = routes[k],
-                    regexp = new RegExp(route.path),
+                    regexp = new RegExp(`^${route.path}$`),
                     match = regexp.exec(request.path);
 
                 if (match !== null && match.index === 0) {
@@ -127,7 +127,7 @@ class Router {
 
         $request = ctx;
 
-        if ($verbs.indexOf(ctx.method) >= 0) {
+        if ($methods.indexOf(ctx.method) >= 0) {
             route = this.find(ctx);
         }
 
