@@ -44,6 +44,16 @@ class Bootstrapper {
                 return _ref.apply(this, arguments);
             };
         })());
+
+        app.use((() => {
+            var _ref2 = (0, _asyncToGenerator3.default)(function* (ctx, next) {
+                ctx.body += "--- OI !";
+            });
+
+            return function (_x3, _x4) {
+                return _ref2.apply(this, arguments);
+            };
+        })());
     }
 }
 

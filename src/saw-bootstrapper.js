@@ -18,10 +18,14 @@ class Bootstrapper {
         });
 
         // Dispatch request to router
-        app.use(async (ctx, next) => {
+        app.use(async(ctx, next) => {
             app.emit("route.register", router);
 
             return await router.dispatch(ctx, next);
+        });
+
+        app.use(async(ctx, next) => {
+            ctx.body += "--- OI !";
         });
     }
 }
