@@ -25,8 +25,9 @@ class Bootstrapper {
                 ctx.body = "bonjour";
             });
 
-            router.get("/", (ctx, next) => {
-                ctx.body = "bonsoir";
+            router.get("/test/{id}", (ctx, next) => {
+                ctx.body = "bonsoir: ";
+                ctx.body += ctx.route_params[0];
 
                 return next();
             });
