@@ -64,6 +64,14 @@ function addRoute(methods, uri, action) {
     return route;
 }
 
+function match_all(pattern, input) {
+    var result = [];
+    input.replace(pattern, function (_, val) {
+        result.push(val);
+    })
+    return result;
+}
+
 class Router {
     constructor() {
         for (var verb of $methods) {
@@ -91,11 +99,11 @@ class Router {
         return addRoute(["DELETE"], uri, action);
     }
 
-    match(methods, uri, action) {
+    only(methods, uri, action) {
         return addRoute(methods, uri, action);
     }
 
-    all(uri, action) {
+    any(uri, action) {
         return addRoute($methods, uri, action);
     }
 
@@ -113,7 +121,7 @@ class Router {
                     regexp = new RegExp(`^${route.path}$`),
                     match = regexp.exec(request.path);
 
-                if (match !== null && match.index === 0) {
+                if (match !== null) {
                     return route;
                 }
             }
@@ -122,20 +130,41 @@ class Router {
         return null;
     }
 
-    async dispatch(ctx, next) {
-        var route = null;
+    match(request) {
+        var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
+        for (let k in routes) {
+            if (routes.hasOwnProperty(k)) {
+                var route = routes[k],
+                    path = route.path;
+
+                var match = match_all(new RegExp(`^${path.replace(/({\w+})/g, "(\\w+)")}$`), request.path);
+
+                if (match.length > 0) {
+                    return [route, match];
+                }
+            }
+        }
+
+        throw new Error("No route matching this request.");
+    }
+
+    async dispatch(ctx, next) {
         $request = ctx;
 
-        if ($methods.indexOf(ctx.method) >= 0) {
-            route = this.find(ctx);
+        ctx.route = null;
+        ctx.route_params = [];
+
+        try {
+            var [route, params] = this.match(ctx);
+        } catch (error) {
+            throw new NotFoundHttpError;
         }
 
-        if (route !== null) {
-            return await route.handle(ctx, next);
-        }
+        ctx.route = route;
+        ctx.route_params = params;
 
-        throw new NotFoundHttpError;
+        return await route.handle(ctx, next);
     }
 
     get request() {
