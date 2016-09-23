@@ -21,6 +21,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var $routes = {},
     $methods = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"];
 
+function requireHandler(path) {
+    var obj = require(path);
+
+    if (typeof obj["__esModule"]["value"] !== "undefined" && obj["__esModule"]["value"] === true) {
+        return obj.default;
+    }
+
+    return obj;
+}
+
 function makeRoute(methods, uri, action) {
     var callable;
 
@@ -36,7 +46,7 @@ function makeRoute(methods, uri, action) {
         callable = (() => {
             var _ref = (0, _asyncToGenerator3.default)(function* () {
                 var [path, method] = action.split("@"),
-                    object = new (require(path))();
+                    object = new (requireHandler(path))();
 
                 return yield object[method];
             });
@@ -49,7 +59,7 @@ function makeRoute(methods, uri, action) {
         callable = (() => {
             var _ref2 = (0, _asyncToGenerator3.default)(function* () {
                 var [path, method] = action,
-                    object = new (require(path))();
+                    object = new (requireHandler(path))();
 
                 return yield object[method];
             });

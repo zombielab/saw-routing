@@ -12,6 +12,16 @@ var $routes = {},
         "DELETE"
     ];
 
+function requireHandler(path) {
+    var obj = require(path);
+
+    if ((typeof obj["__esModule"]["value"] !== "undefined") && (obj["__esModule"]["value"] === true)) {
+        return obj.default;
+    }
+
+    return obj;
+}
+
 function makeRoute(methods, uri, action) {
     var callable;
 
@@ -26,14 +36,14 @@ function makeRoute(methods, uri, action) {
     if (typeof action === "string") {
         callable = async function () {
             var [path, method] = action.split("@"),
-                object = new (require(path));
+                object = new (requireHandler(path));
 
             return await object[method];
         };
     } else if (typeof action === "object" && Array.isArray(action)) {
         callable = async function () {
             var [path, method] = action,
-                object = new (require(path));
+                object = new (requireHandler(path));
 
             return await object[method];
         };
