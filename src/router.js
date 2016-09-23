@@ -72,6 +72,10 @@ function match_all(pattern, input) {
     return result;
 }
 
+function extractParams(route) {
+
+}
+
 class Router {
     constructor() {
         for (var verb of $methods) {
@@ -138,10 +142,26 @@ class Router {
                 var route = routes[k],
                     path = route.path;
 
-                var match = match_all(new RegExp(`^${path.replace(/({\w+})/g, "(\\w+)")}$`), request.path);
+                var keys = [],
+                    values = [],
+                    pattern = path.replace(/(?:{(\w+)})/g, function (_, val) {
+                        keys.push(val);
 
-                if (match.length > 0) {
-                    return [route, match];
+                        return "(\\w+)";
+                    });
+
+                request.path.replace(new RegExp(`^${pattern}$`), function (_, val) {
+                    values.push(val);
+                });
+
+                var params = {};
+
+                for (let _k in keys) {
+                    params[keys[_k]] = values[_k];
+                }
+
+                if (Object.keys(params).length) {
+                    return [route, params];
                 }
             }
         }
@@ -153,7 +173,7 @@ class Router {
         $request = ctx;
 
         ctx.route = null;
-        ctx.route_params = [];
+        ctx.route_params = {};
 
         try {
             var [route, params] = this.match(ctx);

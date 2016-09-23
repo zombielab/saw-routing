@@ -4,6 +4,10 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _keys = require("babel-runtime/core-js/object/keys");
+
+var _keys2 = _interopRequireDefault(_keys);
+
 var _asyncToGenerator2 = require("babel-runtime/helpers/asyncToGenerator");
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
@@ -98,6 +102,8 @@ function match_all(pattern, input) {
     return result;
 }
 
+function extractParams(route) {}
+
 class Router {
     constructor() {
         for (var verb of $methods) {
@@ -162,10 +168,26 @@ class Router {
                 var route = routes[k],
                     path = route.path;
 
-                var match = match_all(new RegExp(`^${ path.replace(/({\w+})/g, "(\\w+)") }$`), request.path);
+                var keys = [],
+                    values = [],
+                    pattern = path.replace(/(?:{(\w+)})/g, function (_, val) {
+                    keys.push(val);
 
-                if (match.length > 0) {
-                    return [route, match];
+                    return "(\\w+)";
+                });
+
+                request.path.replace(new RegExp(`^${ pattern }$`), function (_, val) {
+                    values.push(val);
+                });
+
+                var params = {};
+
+                for (let _k in keys) {
+                    params[keys[_k]] = values[_k];
+                }
+
+                if ((0, _keys2.default)(params).length) {
+                    return [route, params];
                 }
             }
         }
@@ -180,7 +202,7 @@ class Router {
             $request = ctx;
 
             ctx.route = null;
-            ctx.route_params = [];
+            ctx.route_params = {};
 
             try {
                 var [route, params] = _this.match(ctx);
