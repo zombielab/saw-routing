@@ -4,10 +4,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _keys = require("babel-runtime/core-js/object/keys");
-
-var _keys2 = _interopRequireDefault(_keys);
-
 var _asyncToGenerator2 = require("babel-runtime/helpers/asyncToGenerator");
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
@@ -175,17 +171,17 @@ class Router {
                     return "(\\w+)";
                 });
 
-                request.path.replace(new RegExp(`^${ pattern }$`), function (_, val) {
-                    values.push(val);
-                });
+                if (new RegExp(`^${ pattern }$`).exec(request.path) !== null) {
+                    request.path.replace(new RegExp(`^${ pattern }$`), function (_, val) {
+                        values.push(val);
+                    });
 
-                var params = {};
+                    var params = {};
 
-                for (let key in keys) {
-                    params[keys[key]] = values[key];
-                }
+                    for (let key in keys) {
+                        params[keys[key]] = values[key];
+                    }
 
-                if ((0, _keys2.default)(params).length > 0) {
                     return [route, params];
                 }
             }

@@ -150,17 +150,17 @@ class Router {
                         return "(\\w+)";
                     });
 
-                request.path.replace(new RegExp(`^${pattern}$`), function (_, val) {
-                    values.push(val);
-                });
+                if ((new RegExp(`^${pattern}$`)).exec(request.path) !== null) {
+                    request.path.replace(new RegExp(`^${pattern}$`), function (_, val) {
+                        values.push(val);
+                    });
 
-                var params = {};
+                    var params = {};
 
-                for (let key in keys) {
-                    params[keys[key]] = values[key];
-                }
+                    for (let key in keys) {
+                        params[keys[key]] = values[key];
+                    }
 
-                if (Object.keys(params).length > 0) {
                     return [route, params];
                 }
             }
