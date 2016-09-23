@@ -18,7 +18,7 @@ class Bootstrapper {
             // });
 
             router.get("test/{id}", [
-                "app/src/controllers/test",
+                "app/src-compiled/controllers/test",
                 "test"
             ]);
         });

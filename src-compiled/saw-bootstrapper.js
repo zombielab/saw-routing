@@ -32,7 +32,7 @@ class Bootstrapper {
             //     return next();
             // });
 
-            router.get("test/{id}", ["app/src/controllers/test", "test"]);
+            router.get("test/{id}", ["app/src-compiled/controllers/test", "test"]);
         });
 
         // Dispatch request to router
