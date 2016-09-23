@@ -15,7 +15,11 @@ var $routes = {},
 function requireHandler(path) {
     var obj = require(path);
 
-    if ((typeof obj["__esModule"]["value"] !== "undefined") && (obj["__esModule"]["value"] === true)) {
+    if ((typeof obj["__esModule"] !== "undefined") && (obj["__esModule"] === true)) {
+        return obj.default;
+    }
+
+    if (typeof obj["default"] !== "undefined") {
         return obj.default;
     }
 
