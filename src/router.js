@@ -1,7 +1,6 @@
 "use strict";
 
 import Route from "./route";
-import NotFoundHttpError from "./error/not-found-http-error";
 
 var $routes = {},
     $methods = [
@@ -11,8 +10,7 @@ var $routes = {},
         "PUT",
         "PATCH",
         "DELETE"
-    ],
-    $request;
+    ];
 
 function makeRoute(methods, uri, action) {
     var callable;
@@ -62,18 +60,6 @@ function addRoute(methods, uri, action) {
     }
 
     return route;
-}
-
-function match_all(pattern, input) {
-    var result = [];
-    input.replace(pattern, function (_, val) {
-        result.push(val);
-    })
-    return result;
-}
-
-function extractParams(route) {
-
 }
 
 class Router {
@@ -156,11 +142,11 @@ class Router {
 
                 var params = {};
 
-                for (let _k in keys) {
-                    params[keys[_k]] = values[_k];
+                for (let key in keys) {
+                    params[keys[key]] = values[key];
                 }
 
-                if (Object.keys(params).length) {
+                if (Object.keys(params).length > 0) {
                     return [route, params];
                 }
             }
@@ -170,25 +156,19 @@ class Router {
     }
 
     async dispatch(ctx, next) {
-        $request = ctx;
-
-        ctx.route = null;
-        ctx.route_params = {};
+        ctx.request.route = null;
+        ctx.request.params = {};
 
         try {
-            var [route, params] = this.match(ctx);
+            var [route, params] = this.match(ctx.request);
         } catch (error) {
-            throw new NotFoundHttpError;
+            ctx.throw(404);
         }
 
-        ctx.route = route;
-        ctx.route_params = params;
+        ctx.request.route = route;
+        ctx.request.params = params;
 
         return await route.handle(ctx, next);
-    }
-
-    get request() {
-        return $request;
     }
 
     get routes() {

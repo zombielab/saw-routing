@@ -10,12 +10,17 @@ class Bootstrapper {
                 ctx.body = "bonjour";
             });
 
-            router.get("/test/{id}", (ctx, next) => {
-                ctx.body = "bonsoir: ";
-                ctx.body += ctx.route_params["id"];
+            // router.get("/test/{id}", (ctx, next) => {
+            //     ctx.body = "bonsoir: ";
+            //     ctx.body += ctx.route_params["id"];
+            //
+            //     return next();
+            // });
 
-                return next();
-            });
+            router.get("test/{id}", [
+                "app/src/controllers/test",
+                "test"
+            ]);
         });
 
         // Dispatch request to router
@@ -26,7 +31,7 @@ class Bootstrapper {
         });
 
         app.use(async(ctx, next) => {
-            ctx.body += "--- OI !";
+            ctx.body += "--- NEXT !";
         });
     }
 }

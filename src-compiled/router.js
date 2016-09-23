@@ -16,15 +16,10 @@ var _route = require("./route");
 
 var _route2 = _interopRequireDefault(_route);
 
-var _notFoundHttpError = require("./error/not-found-http-error");
-
-var _notFoundHttpError2 = _interopRequireDefault(_notFoundHttpError);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var $routes = {},
-    $methods = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"],
-    $request;
+    $methods = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"];
 
 function makeRoute(methods, uri, action) {
     var callable;
@@ -93,16 +88,6 @@ function addRoute(methods, uri, action) {
 
     return route;
 }
-
-function match_all(pattern, input) {
-    var result = [];
-    input.replace(pattern, function (_, val) {
-        result.push(val);
-    });
-    return result;
-}
-
-function extractParams(route) {}
 
 class Router {
     constructor() {
@@ -182,11 +167,11 @@ class Router {
 
                 var params = {};
 
-                for (let _k in keys) {
-                    params[keys[_k]] = values[_k];
+                for (let key in keys) {
+                    params[keys[key]] = values[key];
                 }
 
-                if ((0, _keys2.default)(params).length) {
+                if ((0, _keys2.default)(params).length > 0) {
                     return [route, params];
                 }
             }
@@ -199,26 +184,20 @@ class Router {
         var _this = this;
 
         return (0, _asyncToGenerator3.default)(function* () {
-            $request = ctx;
-
-            ctx.route = null;
-            ctx.route_params = {};
+            ctx.request.route = null;
+            ctx.request.params = {};
 
             try {
-                var [route, params] = _this.match(ctx);
+                var [route, params] = _this.match(ctx.request);
             } catch (error) {
-                throw new _notFoundHttpError2.default();
+                ctx.throw(404);
             }
 
-            ctx.route = route;
-            ctx.route_params = params;
+            ctx.request.route = route;
+            ctx.request.params = params;
 
             return yield route.handle(ctx, next);
         })();
-    }
-
-    get request() {
-        return $request;
     }
 
     get routes() {
