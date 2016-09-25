@@ -26,7 +26,7 @@ function requireHandler(path) {
     return obj;
 }
 
-function makeRoute(methods, uri, action) {
+function makeRoute(methods, uri, handler, options) {
     var callable;
 
     // Validating route methods
@@ -37,35 +37,35 @@ function makeRoute(methods, uri, action) {
     }
 
     // Resolve route callback
-    if (typeof action === "string") {
+    if (typeof handler === "string") {
         callable = async function () {
-            var [path, method] = action.split("@"),
+            var [path, method] = handler.split("@"),
                 object = new (requireHandler(path));
 
             return await object[method];
         };
-    } else if (typeof action === "object" && Array.isArray(action)) {
+    } else if (typeof handler === "object" && Array.isArray(handler)) {
         callable = async function () {
-            var [path, method] = action,
+            var [path, method] = handler,
                 object = new (requireHandler(path));
 
             return await object[method];
         };
-    } else if (typeof action === "object") {
-        // TODO:
-    } else if (typeof action === "function") {
+    } else if (typeof handler === "object") {
+        // TODO: ?
+    } else if (typeof handler === "function") {
         callable = async function () {
-            return await action;
+            return await handler;
         };
     } else {
         throw new Error("Invalid route callback.");
     }
 
-    return new Route(methods, uri, callable);
+    return new Route(methods, uri, callable, options);
 }
 
-function addRoute(methods, uri, action) {
-    var route = makeRoute(methods, uri, action);
+function addRoute(methods, uri, handler, options) {
+    var route = makeRoute(methods, uri, handler, options);
 
     for (var method of methods) {
         if (typeof $routes[method] !== "undefined") {
@@ -83,32 +83,32 @@ class Router {
         }
     }
 
-    get(uri, action) {
-        return addRoute(["GET", "HEAD"], uri, action);
+    get(uri, handler, options = {}) {
+        return addRoute(["GET", "HEAD"], uri, handler, options);
     }
 
-    post(uri, action) {
-        return addRoute(["POST"], uri, action);
+    post(uri, handler, options = {}) {
+        return addRoute(["POST"], uri, handler, options);
     }
 
-    put(uri, action) {
-        return addRoute(["PUT"], uri, action);
+    put(uri, handler, options = {}) {
+        return addRoute(["PUT"], uri, handler, options);
     }
 
-    patch(uri, action) {
-        return addRoute(["PATCH"], uri, action);
+    patch(uri, handler, options = {}) {
+        return addRoute(["PATCH"], uri, handler, options);
     }
 
-    delete(uri, action) {
-        return addRoute(["DELETE"], uri, action);
+    delete(uri, handler, options = {}) {
+        return addRoute(["DELETE"], uri, handler, options);
     }
 
-    only(methods, uri, action) {
-        return addRoute(methods, uri, action);
+    only(methods, uri, handler, options = {}) {
+        return addRoute(methods, uri, handler, options);
     }
 
-    any(uri, action) {
-        return addRoute($methods, uri, action);
+    any(uri, handler, options = {}) {
+        return addRoute($methods, uri, handler, options);
     }
 
     // TODO:
@@ -116,16 +116,14 @@ class Router {
 
     }
 
-    find(request) {
+    match(request) {
         var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
         for (let k in routes) {
             if (routes.hasOwnProperty(k)) {
-                var route = routes[k],
-                    regexp = new RegExp(`^${route.path}$`),
-                    match = regexp.exec(request.path);
+                var route = routes[k];
 
-                if (match !== null) {
+                if (route.matches(request) === true) {
                     return route;
                 }
             }
@@ -134,53 +132,18 @@ class Router {
         return null;
     }
 
-    match(request) {
-        var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
-
-        for (let k in routes) {
-            if (routes.hasOwnProperty(k)) {
-                var route = routes[k],
-                    path = route.path;
-
-                var keys = [],
-                    values = [],
-                    pattern = path.replace(/(?:{(\w+)})/g, function (_, val) {
-                        keys.push(val);
-
-                        return "(\\w+)";
-                    });
-
-                if ((new RegExp(`^${pattern}$`)).exec(request.path) !== null) {
-                    request.path.replace(new RegExp(`^${pattern}$`), function (_, val) {
-                        values.push(val);
-                    });
-
-                    var params = {};
-
-                    for (let key in keys) {
-                        params[keys[key]] = values[key];
-                    }
-
-                    return [route, params];
-                }
-            }
-        }
-
-        throw new Error("No route matching this request.");
-    }
-
     async dispatch(ctx, next) {
         ctx.request.route = null;
         ctx.request.params = {};
 
-        try {
-            var [route, params] = this.match(ctx.request);
-        } catch (error) {
+        var route = this.match(ctx.request);
+
+        if (route === null) {
             ctx.throw(404);
         }
 
         ctx.request.route = route;
-        ctx.request.params = params;
+        ctx.request.params = route.resolve(ctx.request);
 
         return await route.handle(ctx, next);
     }

@@ -10,17 +10,13 @@ class Bootstrapper {
                 ctx.body = "bonjour";
             });
 
-            // router.get("/test/{id}", (ctx, next) => {
-            //     ctx.body = "bonsoir: ";
-            //     ctx.body += ctx.route_params["id"];
-            //
-            //     return next();
-            // });
-
-            router.get("test/{id}", [
-                "app/src-compiled/controllers/test",
-                "test"
-            ]);
+            router.get("test/{id}", "app/src-compiled/controllers/test@test", {
+                where: {
+                    id: "[0-9]+"
+                },
+                prefix: "fr",
+                name: "test"
+            });
         });
 
         // Dispatch request to router

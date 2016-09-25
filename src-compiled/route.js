@@ -20,10 +20,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var $methods = new _weakMap2.default(),
     $uri = new _weakMap2.default(),
-    $action = new _weakMap2.default(),
+    $handler = new _weakMap2.default(),
     $name = new _weakMap2.default(),
     $prefix = new _weakMap2.default(),
-    $bindings = new _weakMap2.default();
+    $bindings = new _weakMap2.default(),
+    $wheres = new _weakMap2.default(),
+    $compiled = new _weakMap2.default();
 
 function trim(string) {
     if (string.charAt(0) == "/") {
@@ -37,14 +39,76 @@ function trim(string) {
     return string;
 }
 
+function prefix($this) {
+    return $prefix.get($this) !== null ? "/" + $prefix.get($this) : "";
+}
+
+function compileRoute($this) {
+    var regexp = $this.uri,
+        keys = [],
+        required = [],
+        optional = [];
+
+    regexp = regexp.replace(/(?:{(\w+)\?})/g, function (_, val) {
+        keys.push(val);
+        optional.push(val);
+
+        if (typeof $wheres.get($this)[val] !== "undefined") {
+            return "(" + $wheres.get($this)[val] + ")?";
+        }
+
+        return "(\\w+)?";
+    });
+
+    regexp = regexp.replace(/(?:{(\w+)})/g, function (_, val) {
+        keys.push(val);
+        required.push(val);
+
+        if (typeof $wheres.get($this)[val] !== "undefined") {
+            return "(" + $wheres.get($this)[val] + ")";
+        }
+
+        return "(\\w+)";
+    });
+
+    var compiled = {
+        regexp: regexp,
+        keys: keys,
+        required: required,
+        optional: optional
+    };
+
+    $compiled.set($this, compiled);
+
+    return compiled;
+}
+
 class Route {
-    constructor(methods, uri, action) {
+    constructor(methods, uri, handler, options = {}) {
         $methods.set(this, methods);
         $uri.set(this, trim(uri));
-        $action.set(this, action);
+        $handler.set(this, handler);
         $name.set(this, null);
         $prefix.set(this, null);
         $bindings.set(this, {});
+        $wheres.set(this, {});
+        $compiled.set(this, null);
+
+        for (var i in options) {
+            if (options.hasOwnProperty(i)) {
+                if (i == "where") {
+                    $wheres.set(this, options[i]);
+                }
+
+                if (i == "name") {
+                    $name.set(this, options[i]);
+                }
+
+                if (i == "prefix") {
+                    $prefix.set(this, trim(options[i]));
+                }
+            }
+        }
     }
 
     get methods() {
@@ -55,8 +119,8 @@ class Route {
         return $uri.get(this);
     }
 
-    get action() {
-        return $action.get(this);
+    get handler() {
+        return $handler.get(this);
     }
 
     get name() {
@@ -75,12 +139,80 @@ class Route {
         $prefix.set(this, trim(value));
     }
 
+    get wheres() {
+        return $wheres.get(this);
+    }
+
     get bindings() {
         return $bindings.get(this);
     }
 
+    get compiled() {
+        return $compiled.get(this);
+    }
+
     get path() {
-        return ($prefix.get(this) !== null ? "/" + $prefix.get(this) : "") + "/" + $uri.get(this);
+        return prefix(this) + "/" + $uri.get(this);
+    }
+
+    matches(request) {
+        var compiled = compileRoute(this),
+            regexp = prefix(this) + "/" + compiled.regexp;
+
+        if ($methods.get(this).indexOf(request.method) < 0) {
+            return false;
+        }
+
+        if (new RegExp(`^${ regexp }$`).exec(request.path) === null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    resolve(request) {
+        var params = {},
+            compiled = $compiled.get(this);
+
+        if (compiled === null) {
+            compiled = compileRoute(this);
+        }
+
+        var regexp = prefix(this) + "/" + compiled.regexp,
+            keys = compiled.keys,
+            values = [];
+
+        request.path.replace(new RegExp(`^${ regexp }$`), function (_, val) {
+            values.push(val);
+        });
+
+        for (let key in keys) {
+            params[keys[key]] = values[key];
+        }
+
+        return params;
+    }
+
+    parse(params = {}, prefixed = true) {
+        var path = $uri.get(this);
+
+        path = path.replace(/(?:{(\w+)\?})/g, function (_, val) {
+            if (typeof params[val] !== "undefined") {
+                return params[val];
+            }
+
+            return "";
+        });
+
+        path = path.replace(/(?:{(\w+)})/g, function (_, val) {
+            if (typeof params[val] !== "undefined") {
+                return params[val];
+            }
+
+            throw new Error(`Required route param "${ val }" is missing.`);
+        });
+
+        return prefixed === true ? prefix(this) + "/" + path : path;
     }
 
     handle() {
@@ -88,12 +220,12 @@ class Route {
             _arguments = arguments;
 
         return (0, _asyncToGenerator3.default)(function* () {
-            var handler = yield $action.get(_this).call();
+            var handler = yield $handler.get(_this).call();
 
-            // Bindings values to handler
-            for (let k in $bindings.get(_this)) {
-                if ($bindings.get(_this).hasOwnProperty(k)) {
-                    handler[k] = $bindings.get(_this)[k];
+            // Bindings values to handler right before the calling
+            for (let i in $bindings.get(_this)) {
+                if ($bindings.get(_this).hasOwnProperty(i)) {
+                    handler[i] = $bindings.get(_this)[i];
                 }
             }
 
