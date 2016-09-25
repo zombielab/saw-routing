@@ -7,6 +7,7 @@ var $methods = new WeakMap(),
     $prefix = new WeakMap(),
     $bindings = new WeakMap(),
     $wheres = new WeakMap(),
+    $defaults = new WeakMap(),
     $compiled = new WeakMap();
 
 function trim(string) {
@@ -26,7 +27,7 @@ function prefix($this) {
 }
 
 function compileRoute($this) {
-    var regexp = $this.uri,
+    var regexp = $uri.get($this),
         keys = [],
         required = [],
         optional = [];
@@ -74,12 +75,17 @@ class Route {
         $prefix.set(this, null);
         $bindings.set(this, {});
         $wheres.set(this, {});
+        $defaults.set(this, {});
         $compiled.set(this, null);
 
         for (var i in options) {
             if (options.hasOwnProperty(i)) {
                 if (i == "where") {
                     $wheres.set(this, options[i]);
+                }
+
+                if (i == "default") {
+                    $defaults.set(this, options[i]);
                 }
 
                 if (i == "name") {
@@ -125,6 +131,10 @@ class Route {
         return $wheres.get(this);
     }
 
+    get defaults() {
+        return $defaults.get(this);
+    }
+
     get bindings() {
         return $bindings.get(this);
     }
@@ -153,12 +163,8 @@ class Route {
     }
 
     resolve(request) {
-        var params = {},
-            compiled = $compiled.get(this);
-
-        if (compiled === null) {
+        var params = $defaults.get(this),
             compiled = compileRoute(this);
-        }
 
         var regexp = prefix(this) + "/" + compiled.regexp,
             keys = compiled.keys,
@@ -169,7 +175,9 @@ class Route {
         });
 
         for (let key in keys) {
-            params[keys[key]] = values[key];
+            if (typeof values[key] !== "undefined") {
+                params[keys[key]] = values[key];
+            }
         }
 
         return params;

@@ -20,21 +20,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class Bootstrapper {
     static bootstrap(app) {
-        app.on("route.register", function (router) {
-            router.get("/", function (ctx, next) {
-                ctx.body = "bonjour";
-            });
-
-            router.get("test/{id}", "app/src-compiled/controllers/test@test", {
-                where: {
-                    id: "[0-9]+"
-                },
-                prefix: "fr",
-                name: "test"
-            });
-        });
-
-        // Dispatch request to router
         app.use((() => {
             var _ref = (0, _asyncToGenerator3.default)(function* (ctx, next) {
                 app.emit("route.register", _sawRouting2.default);
@@ -44,16 +29,6 @@ class Bootstrapper {
 
             return function (_x, _x2) {
                 return _ref.apply(this, arguments);
-            };
-        })());
-
-        app.use((() => {
-            var _ref2 = (0, _asyncToGenerator3.default)(function* (ctx, next) {
-                ctx.body += "--- NEXT !";
-            });
-
-            return function (_x3, _x4) {
-                return _ref2.apply(this, arguments);
             };
         })());
     }
