@@ -33,7 +33,7 @@ function makeRoute(methods, uri, handler, options) {
     // Validating route methods
     for (let method of methods) {
         if ($methods.indexOf(method) < 0) {
-            throw new Error(`Invalid route method: ${method}.`);
+            throw new Error(`Invalid route method [${method}].`);
         }
     }
 
@@ -126,7 +126,7 @@ class Router {
             return $named_routes[name];
         }
 
-        throw new Error(`Route "${name}" not registered.`);
+        throw new Error(`Route [${name}] not registered.`);
     }
 
     match(request) {
