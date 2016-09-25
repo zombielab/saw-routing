@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/url.js"],"names":["Url","to","route"],"mappings":"AAAA;;;;;AAEA,MAAMA,GAAN,CAAU;AACNC,SAAK,CAEJ;;AAEDC,YAAQ,CAEP;AAPK;;kBAUKF,G","file":"url.js","sourcesContent":["\"use strict\";\n\nclass Url {\n    to() {\n\n    }\n\n    route() {\n\n    }\n}\n\nexport default Url;"]}

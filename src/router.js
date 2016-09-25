@@ -116,6 +116,10 @@ class Router {
 
     }
 
+    named(name) {
+
+    }
+
     match(request) {
         var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
