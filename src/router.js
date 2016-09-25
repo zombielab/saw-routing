@@ -3,6 +3,7 @@
 import Route from "./route";
 
 var $routes = {},
+    $named_routes = {},
     $methods = [
         "GET",
         "HEAD",
@@ -73,6 +74,10 @@ function addRoute(methods, uri, handler, options) {
         }
     }
 
+    if (route.name !== null) {
+        $named_routes[route.name] = route;
+    }
+
     return route;
 }
 
@@ -117,7 +122,11 @@ class Router {
     }
 
     named(name) {
-        //
+        if (typeof $named_routes[name] !== "undefined") {
+            return $named_routes[name];
+        }
+
+        throw new Error(`Route "${name}" not registered.`);
     }
 
     match(request) {
