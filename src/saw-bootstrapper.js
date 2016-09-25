@@ -6,7 +6,7 @@ import router from "saw-routing";
 class Bootstrapper {
     static bootstrap(app) {
         app.use(async(ctx, next) => {
-            app.emit("route.register", router);
+            app.emit("routing: route.register", router);
 
             return await router.dispatch(ctx, next);
         });
