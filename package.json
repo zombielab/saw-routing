@@ -13,7 +13,6 @@
   "homepage": "https://github.com/zombielab/saw-routing",
   "main": "index.js",
   "dependencies": {
-    "saw-support": "https://github.com/zombielab/saw-support.git",
     "saw-config": "https://github.com/zombielab/saw-config.git"
   },
   "devDependencies": {
