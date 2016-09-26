@@ -1,5 +1,7 @@
 "use strict";
 
+import {trim} from "saw-support/lib/helpers";
+
 var $methods = new WeakMap(),
     $uri = new WeakMap(),
     $handler = new WeakMap(),
@@ -9,18 +11,6 @@ var $methods = new WeakMap(),
     $wheres = new WeakMap(),
     $defaults = new WeakMap(),
     $compiled = new WeakMap();
-
-function trim(string) {
-    if (string.charAt(0) == "/") {
-        string = string.substr(1, string.length - 1);
-    }
-
-    if (string.charAt(string.length - 1) == "/") {
-        string = string.substr(0, string.length - 1);
-    }
-
-    return string;
-}
 
 function prefix($this) {
     return $prefix.get($this) !== null ? "/" + $prefix.get($this) : "";
@@ -69,7 +59,7 @@ function compileRoute($this) {
 class Route {
     constructor(methods, uri, handler, options = {}) {
         $methods.set(this, methods);
-        $uri.set(this, trim(uri));
+        $uri.set(this, trim(uri, "/"));
         $handler.set(this, handler);
         $name.set(this, null);
         $prefix.set(this, null);
@@ -93,7 +83,7 @@ class Route {
                 }
 
                 if (i == "prefix") {
-                    $prefix.set(this, trim(options[i]));
+                    $prefix.set(this, trim(options[i], "/"));
                 }
             }
         }
@@ -124,7 +114,7 @@ class Route {
     }
 
     set prefix(value) {
-        $prefix.set(this, trim(value));
+        $prefix.set(this, trim(value, "/"));
     }
 
     get wheres() {
@@ -189,6 +179,8 @@ class Route {
         path = path.replace(/(?:{(\w+)\?})/g, function (_, val) {
             if (typeof params[val] !== "undefined") {
                 return params[val];
+            } else if (typeof $defaults.get(this)[val] !== "undefined") {
+                return $defaults.get(this)[val];
             }
 
             return "";
