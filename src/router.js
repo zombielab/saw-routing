@@ -1,9 +1,10 @@
 "use strict";
 
+import url from "./url";
 import Route from "./route";
 
 var $routes = {},
-    $named_routes = {},
+    $all_routes = [],
     $methods = [
         "GET",
         "HEAD",
@@ -74,9 +75,7 @@ function addRoute(methods, uri, handler, options) {
         }
     }
 
-    if (route.name !== null) {
-        $named_routes[route.name] = route;
-    }
+    $all_routes.push(route);
 
     return route;
 }
@@ -121,14 +120,6 @@ class Router {
 
     }
 
-    named(name) {
-        if (typeof $named_routes[name] !== "undefined") {
-            return $named_routes[name];
-        }
-
-        throw new Error(`Route [${name}] not registered.`);
-    }
-
     match(request) {
         var routes = typeof $routes[request.method] !== "undefined" ? $routes[request.method] : [];
 
@@ -146,9 +137,6 @@ class Router {
     }
 
     async dispatch(ctx, next) {
-        ctx.request.route = null;
-        ctx.request.params = {};
-
         var route = this.match(ctx.request);
 
         if (route === null) {
@@ -162,7 +150,7 @@ class Router {
     }
 
     get routes() {
-        return $routes;
+        return $all_routes;
     }
 }
 

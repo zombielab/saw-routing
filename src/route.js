@@ -10,7 +10,8 @@ var $methods = new WeakMap(),
     $bindings = new WeakMap(),
     $wheres = new WeakMap(),
     $defaults = new WeakMap(),
-    $compiled = new WeakMap();
+    $compiled = new WeakMap(),
+    $secure = new WeakMap();
 
 function prefix($this) {
     return $prefix.get($this) !== null ? "/" + $prefix.get($this) : "";
@@ -22,7 +23,7 @@ function compileRoute($this) {
         required = [],
         optional = [];
 
-    regexp = regexp.replace(/(?:{(\w+)\?})/g, function (_, val) {
+    regexp = regexp.replace(/(?:{(.*?)\?})/g, function (_, val) {
         keys.push(val);
         optional.push(val);
 
@@ -30,10 +31,10 @@ function compileRoute($this) {
             return "(" + $wheres.get($this)[val] + ")?";
         }
 
-        return "(\\w+)?";
+        return "(.*?)?";
     });
 
-    regexp = regexp.replace(/(?:{(\w+)})/g, function (_, val) {
+    regexp = regexp.replace(/(?:{(.*?)})/g, function (_, val) {
         keys.push(val);
         required.push(val);
 
@@ -41,7 +42,7 @@ function compileRoute($this) {
             return "(" + $wheres.get($this)[val] + ")";
         }
 
-        return "(\\w+)";
+        return "(.*?)";
     });
 
     var compiled = {
@@ -67,6 +68,7 @@ class Route {
         $wheres.set(this, {});
         $defaults.set(this, {});
         $compiled.set(this, null);
+        $secure.set(this, null);
 
         for (var i in options) {
             if (options.hasOwnProperty(i)) {
@@ -84,6 +86,10 @@ class Route {
 
                 if (i == "prefix") {
                     $prefix.set(this, trim(options[i], "/"));
+                }
+
+                if (i == "secure") {
+                    $secure.set(this, options[i]);
                 }
             }
         }
@@ -137,6 +143,14 @@ class Route {
         return prefix(this) + "/" + $uri.get(this);
     }
 
+    get secure() {
+        return $secure.get(this);
+    }
+
+    set secure(value) {
+        $secure.set(this, value);
+    }
+
     matches(request) {
         var compiled = compileRoute(this),
             regexp = prefix(this) + "/" + compiled.regexp;
@@ -171,30 +185,6 @@ class Route {
         }
 
         return params;
-    }
-
-    parse(params = {}, prefixed = true) {
-        var path = $uri.get(this);
-
-        path = path.replace(/(?:{(\w+)\?})/g, function (_, val) {
-            if (typeof params[val] !== "undefined") {
-                return params[val];
-            } else if (typeof $defaults.get(this)[val] !== "undefined") {
-                return $defaults.get(this)[val];
-            }
-
-            return "";
-        });
-
-        path = path.replace(/(?:{(\w+)})/g, function (_, val) {
-            if (typeof params[val] !== "undefined") {
-                return params[val];
-            }
-
-            throw new Error(`Required route param [${val}] is missing.`);
-        });
-
-        return prefixed === true ? prefix(this) + "/" + path : path;
     }
 
     async handle() {
